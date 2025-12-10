@@ -1,0 +1,30 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: API Alerts
+    folder: Observability
+    interval: 1m
+    rules:
+      - uid: high_error_logs
+        title: High Error Log Rate
+        condition: A
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'sum(rate({service_name="sample-api"} |= "ERROR" [5m])) > 5'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High rate of ERROR logs detected
+          description: More than 5 ERROR logs per second for 5 minutes
+        labels:
+          severity: warning
+          team: backend

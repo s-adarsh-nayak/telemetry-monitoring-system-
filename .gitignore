@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Docker volumes
+prometheus-data/
+loki-data/
+tempo-data/
+grafana-data/
+
+# OS
+.DS_Store
+Thumbs.db

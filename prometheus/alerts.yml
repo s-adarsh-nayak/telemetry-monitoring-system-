@@ -1,0 +1,76 @@
+groups:
+  - name: app.errors
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          / sum(rate(http_requests_total[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: page
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "API error rate is {{ $value | humanizePercentage }} (>5%) for 10 minutes"
+          runbook: "https://runbooks.example.com/high-error-rate"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, 
+            sum by (le) (rate(http_request_duration_seconds_bucket[5m]))
+          ) > 0.3
+        for: 15m
+        labels:
+          severity: page
+          team: backend
+        annotations:
+          summary: "High latency detected"
+          description: "API p95 latency is {{ $value }}s (>300ms) for 15 minutes"
+          runbook: "https://runbooks.example.com/high-latency"
+
+      - alert: ServiceDown
+        expr: up{job="sample-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Service is down"
+          description: "API service {{ $labels.instance }} has been down for 2 minutes"
+          runbook: "https://runbooks.example.com/service-down"
+
+  - name: app.performance
+    interval: 30s
+    rules:
+      - alert: HighRequestRate
+        expr: sum(rate(http_requests_total[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High request rate"
+          description: "Request rate is {{ $value }} req/s (>100) for 5 minutes"
+
+      - alert: LowRequestRate
+        expr: sum(rate(http_requests_total[5m])) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Low request rate - possible issue"
+          description: "Request rate is {{ $value }} req/s (<0.1) for 10 minutes"
+
+  - name: recording.rules
+    interval: 30s
+    rules:
+      - record: job:http_requests:rate5m
+        expr: sum by (job) (rate(http_requests_total[5m]))
+
+      - record: job:http_request_duration:p95
+        expr: histogram_quantile(0.95, sum by (job, le) (rate(http_request_duration_seconds_bucket[5m])))
+
+      - record: job:http_request_duration:p99
+        expr: histogram_quantile(0.99, sum by (job, le) (rate(http_request_duration_seconds_bucket[5m])))
